@@ -1,5 +1,8 @@
 import pandas as pd
 
+from sentiment import SentimentAnalyzer
+from escalation import get_escalation_message
+
 
 def load_knowledge_base(filename):
     try:
@@ -24,18 +27,25 @@ def load_knowledge_base(filename):
         return []
 
 
-def conversation_loop(knowledge_base):
+def conversation_loop(knowledge_base, analyzer):
     print("\nWelcome to Student Support AI")
     print("Type 'quit' to exit.\n")
 
     while True:
         user_input = input("You: ")
 
-        if user_input.lower() == "quit":
+        if user_input.strip().lower() == "quit":
             print("Goodbye!")
             break
 
-        print("Bot: Processing your question...")
+        sentiment = analyzer.analyze(user_input)
+        print(f"Sentiment: {sentiment}")
+
+        escalation = get_escalation_message(sentiment)
+        if escalation:
+            print(f"Recommended escalation: {escalation}")
+
+        # Semantic search (Part 2) will print the matching answer here.
         print("Bot: Semantic search will answer this later.\n")
 
 
@@ -49,7 +59,8 @@ def main():
     print("Knowledge base loaded successfully.")
     print(f"Total questions loaded: {len(knowledge_base)}")
 
-    conversation_loop(knowledge_base)
+    analyzer = SentimentAnalyzer()
+    conversation_loop(knowledge_base, analyzer)
 
 
 if __name__ == "__main__":
