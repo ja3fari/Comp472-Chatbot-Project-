@@ -2,7 +2,7 @@ import pandas as pd
 
 from sentiment import SentimentAnalyzer
 from escalation import get_escalation_message
-
+from semantic_search import load_model, generate_embeddings, find_best_answer
 
 def load_knowledge_base(filename):
     try:
@@ -27,9 +27,12 @@ def load_knowledge_base(filename):
         return []
 
 
-def conversation_loop(knowledge_base, analyzer):
+def conversation_loop(knowledge_base, analyzer, model, kb_questions, kb_answers, kb_embeddings):
     print("\nWelcome to Student Support AI")
     print("Type 'quit' to exit.\n")
+
+    kb_questions = [item["question"] for item in knowledge_base]
+    kb_answers   = [item["answer"]   for item in knowledge_base]
 
     while True:
         user_input = input("You: ")
@@ -45,8 +48,8 @@ def conversation_loop(knowledge_base, analyzer):
         if escalation:
             print(f"Recommended escalation: {escalation}")
 
-        # Semantic search (Part 2) will print the matching answer here.
-        print("Bot: Semantic search will answer this later.\n")
+        answer = find_best_answer(user_input, model, kb_questions, kb_answers, kb_embeddings)
+        print(f"Answer: {answer}\n")
 
 
 def main():
@@ -60,8 +63,13 @@ def main():
     print(f"Total questions loaded: {len(knowledge_base)}")
 
     analyzer = SentimentAnalyzer()
-    conversation_loop(knowledge_base, analyzer)
+    
+    model         = load_model()
+    kb_questions  = [item["question"] for item in knowledge_base]
+    kb_answers    = [item["answer"]   for item in knowledge_base]
+    kb_embeddings = generate_embeddings(model, kb_questions)
 
+    conversation_loop(knowledge_base, analyzer, model, kb_questions, kb_answers, kb_embeddings)
 
 if __name__ == "__main__":
     main()
